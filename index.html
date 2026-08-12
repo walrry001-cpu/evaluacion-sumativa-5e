@@ -1103,23 +1103,12 @@ document.getElementById('btnAgregarPregunta').addEventListener('click', ()=>{
    No hay IA disponible fuera de claude.ai, así que el reconocimiento
    es por patrones de texto (numeración + a) b) c) d) + "Rpta: x").
    Las preguntas extraídas SIEMPRE quedan en el editor para revisión
-   manual antes de guardar. Además, se mezcla al azar el orden de las
-   4 opciones de cada pregunta para que la correcta no quede siempre
-   en la misma letra.
+   manual antes de guardar. El orden de las opciones (a, b, c, d) se
+   respeta tal cual aparece en el PDF, para que la letra marcada como
+   correcta en el documento original sea la misma letra correcta aquí.
 ============================================================ */
 if(window.pdfjsLib){
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-}
-
-function shuffleOpciones(q){
-  const orden = [0,1,2,3];
-  for(let i=orden.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [orden[i],orden[j]] = [orden[j],orden[i]];
-  }
-  const nuevasOpciones = orden.map(i=>q.opciones[i]);
-  const nuevaCorrecta = orden.indexOf(q.correcta);
-  return {pregunta:q.pregunta, opciones:nuevasOpciones, correcta:nuevaCorrecta};
 }
 
 function parsePDFTextoAPreguntas(texto){
@@ -1227,14 +1216,13 @@ document.getElementById('pdfPreguntas').addEventListener('change', async (e)=>{
 
     const sinRpta = preguntasDetectadas.filter(q=>!q.rptaDetectada).length;
 
-    // Mezcla el orden de las opciones de cada pregunta antes de cargarlas al editor
-    const mezcladas = preguntasDetectadas.map(q=>shuffleOpciones(q));
-
-    bancoActual = mezcladas;
+    // Las preguntas se cargan tal cual se detectaron en el PDF, sin alterar
+    // el orden de las opciones a/b/c/d ni la letra marcada como correcta.
+    bancoActual = preguntasDetectadas;
     ocultarComenzar();
     renderBanco();
 
-    statusBox.innerHTML = `<span style="color:var(--good,#2e7d32);">✔ Se importaron ${preguntasDetectadas.length} pregunta(s) y se mezcló el orden de sus opciones.</span>
+    statusBox.innerHTML = `<span style="color:var(--good,#2e7d32);">✔ Se importaron ${preguntasDetectadas.length} pregunta(s), tal como aparecen en el PDF (mismo orden de opciones a/b/c/d).</span>
       ${sinRpta>0 ? `<br><span style="color:var(--danger,#b3261e);">⚠ En ${sinRpta} pregunta(s) no se detectó la línea "Rpta:" — revisa cuál opción quedó marcada como correcta antes de guardar.</span>` : ''}
       <br>Revisa el texto y las opciones abajo antes de guardar; el reconocimiento es automático por patrones, no por inteligencia artificial, así que puede tener errores.`;
 
